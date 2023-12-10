@@ -19,7 +19,7 @@ import { getAuth } from "../services/authservice";
 import ChangePassword from "./ChangePassword";
 import Users from "./Users";
 import Sessions from "./Sessions";
-import { IconButton, Pane, Paragraph, Tab, Tablist } from "evergreen-ui";
+import { IconButton, Pane, Tab, Tablist } from "evergreen-ui";
 import { useDisclosure } from "@mantine/hooks";
 import { Modal } from "@mantine/core";
 import Fonctions from "./config/Fonctions";
@@ -195,7 +195,7 @@ function Dashboard() {
         title="PANNEAU DE CONFIGURATION"
         fullScreen
         radius={0}
-        transitionProps={{ transition: 'fade', duration: 200 }}
+        transitionProps={{ transition: 'scale', duration: 200 }}
       >
 
   <Pane display="flex" height={500} marginTop={5}>

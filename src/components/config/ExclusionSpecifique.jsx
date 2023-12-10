@@ -72,7 +72,7 @@ const schema = yup
 
     const {isLoading: isLoadingR} = useQuery(key,() => getRubriques(),{
       onSuccess(data){
-        const nd = data.map(d => ({label:d.libelle,value:d._id}));
+        const nd = data.map(d => ({label:`${d.code} ${d.libelle}`,value:d._id}));
         setRubriques(nd);
       }
     })
@@ -183,7 +183,7 @@ const schema = yup
     return (
       <>
       <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingR} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">

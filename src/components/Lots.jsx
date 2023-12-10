@@ -5,7 +5,7 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createLot, getLots, updateLot } from '../services/lotservice';
+import { createLot, generateBulletin, getLots, updateLot } from '../services/lotservice';
 import { IconButton } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,11 +13,13 @@ import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaAlgolia, FaSearch } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { DatePicker } from '@mantine/dates';
 import fr from 'dayjs/locale/fr'
 import { format, parse } from 'date-fns'
+import DocViewer, { DocViewerRenderers } from '@cyntler/react-doc-viewer'
+// import { saveAs } from 'file-saver';
 
 const schema = yup
   .object({
@@ -32,6 +34,7 @@ function Lots() {
         libelle: "",
         range:[],
       };
+      const [pdf, setPdf] = useState(null);
       const {
         control,
         setValue,
@@ -82,6 +85,20 @@ function Lots() {
               })
         }
     })
+  
+    const {mutate: genBulletin,isLoading:isLoadingG} = useMutation((id) => generateBulletin(id), {
+      onSuccess: (_) => {
+        const fileName = _.split('/').slice(1).join('-');
+       setPdf({uri:`${import.meta.env.VITE_BACKURL}/${_}`,fileName});
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'CREATION',
+              message: 'Génération échouée !!!',
+              color:"red"
+            })
+      }
+  })
 
     const {mutate: update,isLoading: isLoadingu} = useMutation((data) => updateLot(data._id, data.data), {
         onSuccess: (_) => {
@@ -145,6 +162,10 @@ function Lots() {
         toggle();
     }
 
+    const handleGenerateBulletin = (lot) => {
+      genBulletin(lot?._id);
+    }
+
 
     const renderHeader = () => {
         return (
@@ -158,8 +179,7 @@ function Lots() {
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
         <IconButton onClick={() => handleUpdateLot(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
-        {/* <Button type="button" onClick={() => handleViewLot(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
-
+        <IconButton onClick={() => handleGenerateBulletin(rowData)} icon={<FaAlgolia className="text-blue-500"/>} />
         </div>;
         
     }
@@ -167,7 +187,7 @@ function Lots() {
     const header = renderHeader();
   return (
     <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingG} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">
@@ -209,7 +229,7 @@ function Lots() {
                           control={control}
                           name="range"
                           render={({ field }) => (
-                            <DatePicker type="range" locale={fr} allowSingleDateInRange value={field.value} onChange={(v) => field.onChange(v)} />
+                            <DatePicker type="range" locale={fr} allowSingleDateInRange value={field.value || []} onChange={(v) => field.onChange(v)} />
                           )}
                         />
                       </div>
@@ -223,6 +243,12 @@ function Lots() {
           </div>
         </form>
    </Modal>
+   <div className="my-5 w-10/12 mx-auto">
+      {pdf && <DocViewer prefetchMethod="GET" documents={[
+            pdf
+          ]} pluginRenderers={DocViewerRenderers} />}
+   </div>
+  
 </div>
   )
 }

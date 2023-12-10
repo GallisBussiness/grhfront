@@ -28,7 +28,7 @@ const schema = yup
     description: yup.string().required(),
     fonction: yup.string().required(),
     division: yup.string().required(),
-    service: yup.string()
+    service: yup.string().nullable()
   })
   .required();
 
@@ -154,7 +154,7 @@ function Nominations({employe}) {
     const onCreate = (data) => {
         const {_id,date,service,...rest} = data;
         const nd = format(new Date(date),"yyyy-MM-dd")
-        if(service === ""){
+        if(!service){
          create({date: nd,...rest});
       }else {
         create({date: nd,service,...rest});
@@ -229,7 +229,7 @@ function Nominations({employe}) {
   return (
     <>
       <div className="content-wrapper">
-     <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingF} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+     <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingF || isLoadings} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">

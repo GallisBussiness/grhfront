@@ -25,6 +25,7 @@ import { format, intervalToDuration, parse, parseISO, subMinutes } from "date-fn
 import Nominations from "./config/Nominations";
 import AttributionSpecifique from "./config/AttributionSpecifique";
 import ExclusionSpecifique from "./config/ExclusionSpecifique";
+import Bulletins from "./Bulletins";
 
 function Employe() {
 
@@ -71,7 +72,6 @@ function Employe() {
           return {...f,presences:{...f.presences,time:{heures: 0,minutes:0}}};
         })
         setPresences(cf);
-
       },
       onError: (_) => {
         toaster.danger(`Une erreur est survenue !`);
@@ -223,7 +223,7 @@ function Employe() {
             display={selectedIndex === 5 ? 'block' : 'none'}
             role="tabpanel"
           >
-            <Paragraph>Panel 5</Paragraph>
+           {employe && <Bulletins employe={employe} />} 
           </Pane>
       </Pane>
     </Pane>

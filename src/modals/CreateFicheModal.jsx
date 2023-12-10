@@ -1,11 +1,10 @@
-import { Dialog } from "primereact/dialog";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { create } from "react-modal-promise";
-import { Button, TextInput} from "@mantine/core";
-import DatePicker from "react-date-picker";
+import { Button, Modal, TextInput} from "@mantine/core";
 import { format } from "date-fns";
+import { DatePickerInput } from "@mantine/dates";
 
 
 const schema = yup.object({
@@ -18,7 +17,7 @@ const schema = yup.object({
 function CreateFicheModal({ isOpen,onResolve, onReject}) {
   
   const defaultValues = {
-    date: "",
+    date: new Date(),
     description:"",
     
   };
@@ -41,10 +40,10 @@ function CreateFicheModal({ isOpen,onResolve, onReject}) {
 
   return (
     <>
-         <Dialog
+         <Modal
         header="Créer une Fiche"
-        visible={isOpen}
-        onHide={() => onReject(false)}
+        opened={isOpen}
+        onClose={() => onReject(false)}
         className="w-8/12 h-1/2"
       >
         <form onSubmit={handleSubmit(onCreate)} method="POST">
@@ -55,7 +54,7 @@ function CreateFicheModal({ isOpen,onResolve, onReject}) {
                 control={control}
                 name="date"
                 render={({ field }) => (
-                  <DatePicker onChange={field.onChange} value={field.value} format="dd/MM/yyyy" className="w-full"/>
+                  <DatePickerInput onChange={field.onChange} value={field.value} className="w-full"/>
                 )}
               />
             </div>
@@ -78,7 +77,7 @@ function CreateFicheModal({ isOpen,onResolve, onReject}) {
               
             </div>
         </form>
-      </Dialog>
+      </Modal>
     </>
   )
 }

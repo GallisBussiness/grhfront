@@ -5,8 +5,6 @@ import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import P404 from './components/P404';
 import {QueryClient,QueryClientProvider } from 'react-query'
-import 'react-date-picker/dist/DatePicker.css';
-import 'react-calendar/dist/Calendar.css';
 import 'primereact/resources/themes/saga-green/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';

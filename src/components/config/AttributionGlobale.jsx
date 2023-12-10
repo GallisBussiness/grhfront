@@ -70,7 +70,7 @@ function Attributionglobales() {
 
     const {isLoading: isLoadingR} = useQuery(key,() => getRubriques(),{
       onSuccess(data){
-        const nd = data.map(d => ({label:d.libelle,value:d._id}));
+        const nd = data.map(d => ({label:`${d.code} ${d.libelle}`,value:d._id}));
         setRubriques(nd);
       }
     })
@@ -188,7 +188,7 @@ function Attributionglobales() {
                  globalFilterFields={['regle','rubrique.libelle']}
                  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
                   <Column field="rubrique.libelle" header="RUBRIQUE" sortable style={{ minWidth: '10rem' }} /> 
-                 <Column field="regle" header="REGLE" sortable style={{ minWidth: '10rem' }} />      
+                 <Column field="rubrique.section.nom" header="SECTION" sortable style={{ minWidth: '10rem' }} />      
                  <Column headerStyle={{ width: '4rem', textAlign: 'center' }} bodyStyle={{ textAlign: 'center', overflow: 'visible' }} body={actionBodyTemplate} />
              </DataTable>
          </div>

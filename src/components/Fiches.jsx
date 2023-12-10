@@ -47,7 +47,6 @@ function Fiches() {
     (data) => createFiche(data),
     {
       onSuccess: (_) => {
-         console.log(_);
         qc.invalidateQueries(qk);
       }
     }
@@ -213,12 +212,7 @@ function Fiches() {
             emptyMessage="Aucune Fiches trouvées"
             currentPageReportTemplate="Voir {first} de {last} à {totalRecords} Fiches"
           >
-            <Column
-              field="code"
-              header="CODE"
-              sortable
-              style={{ minWidth: "2rem" }}
-            />
+            
 
             <Column
               field="date"

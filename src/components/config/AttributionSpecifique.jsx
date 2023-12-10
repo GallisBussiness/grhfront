@@ -72,7 +72,7 @@ const schema = yup
 
     const {isLoading: isLoadingR} = useQuery(key,() => getRubriques(),{
       onSuccess(data){
-        const nd = data.map(d => ({label:d.libelle,value:d._id}));
+        const nd = data.map(d => ({label:`${d.code} ${d.libelle}`,value:d._id}));
         setRubriques(nd);
       }
     })
@@ -163,7 +163,7 @@ const schema = yup
     const renderHeader = () => {
         return (
             <div className="flex justify-content-between align-items-center">
-                <h5 className="m-0">LISTE DES ATTRIBUTIONS SPECIFIQUES</h5>
+                <h5 className="m-0">LISTE DES ATTRIBUTIONS INDIVIDUELLES</h5>
                     <TextInput value={globalFilterValue} onChange={onGlobalFilterChange} leftSection={<FaSearch/>} placeholder="Rechercher ..." />
             </div>
         )
@@ -202,7 +202,7 @@ const schema = yup
     </div>
    {/* Modals */}
 
-   <Modal opened={opened} onClose={close} title={curAttributionSpecifique ? "UPDATE ATTRIBUTION SPECIFIQUE" : "CREATION ATTRIBUTION SPECIFIQUE"} centered>
+   <Modal opened={opened} onClose={close} title={curAttributionSpecifique ? "UPDATE ATTRIBUTION INDIVUDUELLE" : "CREATION ATTRIBUTION INDIVUDUELLE"} centered>
    <form onSubmit={curAttributionSpecifique ? handleSubmit(onUpdate) : handleSubmit(onCreate)} method="POST" className="flex flex-col space-y-2">
                   <div>
                         <Controller control={control} name="rubrique" render={({field}) => (

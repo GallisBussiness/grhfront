@@ -74,7 +74,7 @@ const schema = yup
 
     const {isLoading: isLoadingR} = useQuery(key,() => getRubriques(),{
       onSuccess(data){
-        const nd = data.map(d => ({label:d.libelle,value:d._id}));
+        const nd = data.map(d => ({label:`${d.code} ${d.libelle}`,value:d._id}));
         setRubriques(nd);
       }
     })

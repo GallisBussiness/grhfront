@@ -125,8 +125,14 @@ function Divisions() {
     };
 
     const onUpdate = (d) => {
-        const {_id,...rest} = d;
-        update({_id,data: rest});
+      console.log(d)
+        const {_id,parent,...rest} = d;
+        if(parent === "") {
+          update({_id,data: {...rest}});
+        }else {
+          update({_id,data: {parent,...rest}});
+        }
+       
      };
   
 
@@ -212,7 +218,7 @@ function Divisions() {
                           render={({ field }) => (
                             <Select label="DIVISION PARENTE" placeholder="parente"
                             error={errors.parent && errors.parent.message}
-                            data={divis}
+                            data={curDivision ? divis.filter(d => d.value !== curDivision._id) : divis}
                             value={field.value} onChange={field.onChange} searchable/>
                           )}
                         />
