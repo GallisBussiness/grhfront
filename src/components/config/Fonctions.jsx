@@ -5,16 +5,17 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createFonction, getFonctions, updateFonction } from '../../services/fonctionservice';
-import { IconButton } from 'evergreen-ui'
+import { createFonction, getFonctions, removeFonction, updateFonction } from '../../services/fonctionservice';
+import { IconButton, toaster } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
+import { confirmPopup } from 'primereact/confirmpopup';
 
 const schema = yup
   .object({
@@ -95,7 +96,25 @@ function Fonctions() {
                 color:"red"
               })
            }
-    })
+    });
+
+    const {mutate: supprimer,isLoading:isLoadingde} = useMutation((id) => removeFonction(id), {
+      onSuccess: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression reussie !!!',
+              color:"green"
+            })
+       qc.invalidateQueries(qk);
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression échouée !!!',
+              color:"red"
+            })
+      }
+  });
 
     const leftToolbarTemplate = () => {
         return (
@@ -133,6 +152,17 @@ function Fonctions() {
         toggle();
     }
 
+    const handleDeleteFonction = (event,row) => {
+      confirmPopup({
+        target: event.currentTarget,
+        message: 'Etes vous sure de supprimer ?',
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        accept: () => supprimer(row._id),
+        reject:() => toaster.notify('suppression annule !!')
+    });
+     }
+
 
     const renderHeader = () => {
         return (
@@ -145,6 +175,7 @@ function Fonctions() {
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
+          <IconButton onClick={(event) => handleDeleteFonction(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
         <IconButton onClick={() => handleUpdateFonction(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
         {/* <Button type="button" onClick={() => handleViewFonction(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
@@ -155,7 +186,7 @@ function Fonctions() {
     const header = renderHeader();
   return (
     <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingde} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">

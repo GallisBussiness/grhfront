@@ -81,17 +81,17 @@ function Login() {
       <BackgroundImage src="/rh.jpg" className="h-screen flex items-center justify-center">
         <div className="flex items-center justify-center lg:flex-row-reverse h-full">
           <div className="text-center lg:text-left">
-            <h1 className="text-5xl text-blue-700 font-bold animate__animated animate__bounceInDown">
-              GRH CROUS/Z
-            </h1>
             {/* <p className="py-6">Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda excepturi exercitationem quasi. In deleniti eaque aut repudiandae et a id nisi.</p> */}
           </div>
           <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-white p-4 animate__animated animate__zoomInLeft">
             <div className=" flex items-center justify-center">
-              <div className="">
+              <div className="flex flex-col items-center justify-center">
                 <div className="w-24 rounded">
                   <img src="/logo.png" />
                 </div>
+                <h1 className="text-5xl text-green-400 font-bold animate__animated animate__bounceInDown">
+              GRH CROUS/Z
+            </h1>
               </div>
             </div>
             <form onSubmit={handleSubmit(onConnect)} method="POST">

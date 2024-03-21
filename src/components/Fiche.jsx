@@ -8,20 +8,26 @@ import { Pulsar, Table } from "evergreen-ui";
 import { useState } from "react";
 import  FichePrint  from "./FichePrint";
 import { groupBy, keys } from "lodash";
-import { format, parseISO } from "date-fns";
+import { compareAsc, format, parseISO } from "date-fns";
+import FicheQrPrint from "./FicheQrPrint";
+import QRGenerator from "./QrCodeGenerator";
+import { useAppStore } from "./app.store";
+import { Can } from "../acl/Can";
 
 function Fiche() {
   const [pres,setP] = useState([]);
   const [kpres,setKpre] = useState([]);
   const [curfiche,setCurfiche] = useState(null);
+  const { role } = useAppStore();
     const {id} = useParams();
     const key = ["get_fiche",id];
     const {isLoading} = useQuery(key,() => getFiche(id),{
       onSuccess:(_) => {
-        setCurfiche(_[0]);
-        const grouByEmp = groupBy(_[0].presences,v => v.employe._id);
-      setKpre(keys(grouByEmp));
-      setP(grouByEmp);
+        const of = {..._[0],presences:_[0].presences.sort((a,b) => compareAsc(parseISO(a.heure),parseISO(b.heure)))};
+        setCurfiche(of);
+        const grouByEmp = groupBy(of.presences,v => v.employe._id);
+        setKpre(keys(grouByEmp));
+        setP(grouByEmp);
       },
       onError:console.log
     })
@@ -61,12 +67,19 @@ function Fiche() {
 
   return (
     <>
-    <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}
+    <Can I='manage' a={role}>
+       <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}
           loaderProps={{ color: 'blue', type: 'bars' }} />
       {curfiche && <div className="flex flex-col w-11/12 my-5 mx-auto">
               <div className="w-1/3 mx-auto">
+              <div className="hidden">
+              <QRGenerator value={curfiche?.code} documentId="qrfiche" />
+            </div>
                 <PDFDownloadLink document={<FichePrint presences={pres} kpres={kpres} fiche={curfiche} />} fileName={`FICHE_PRESENCE_DU_${curfiche?.date}_${curfiche?.ref}`}>
-                  <Button className="bg-green-600 w-auto">IMPRIMER LA FICHE <FaPrint/>  <Pulsar /></Button>
+                  <Button bg='green' mr={4}>IMPRIMER LA FICHE <FaPrint/></Button>
+                </PDFDownloadLink>
+                <PDFDownloadLink document={<FicheQrPrint fiche={curfiche}/>}>
+                  <Button className="bg-blue-600 w-auto">IMPRIMER LE CODE QR <FaPrint/>  <Pulsar /></Button>
                 </PDFDownloadLink>
                 
               </div>
@@ -96,6 +109,8 @@ function Fiche() {
                 </Table>
                 </div>
             </div>}
+    </Can>
+   
     </>
   )
 }

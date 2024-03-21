@@ -1,11 +1,8 @@
 import { Link, Route, Routes, useNavigate} from "react-router-dom"
-
-import { FaUnlock, FaUserCircle, FaUserCog, FaUsers} from 'react-icons/fa';
-import { FcCalendar } from "react-icons/fc"
+import { FaBook, FaSignOutAlt, FaUnlock, FaUserCircle, FaUserCog, FaUsers} from 'react-icons/fa';
+import { FcOvertime } from "react-icons/fc"
 import { PiGearSixDuotone } from "react-icons/pi";
-import { Button } from "primereact/button";
-
-import { GiNotebook } from 'react-icons/gi';
+import { GiNotebook, GiPapers } from 'react-icons/gi';
 import { SiBookstack } from 'react-icons/si';
 import { useMemo, useState } from "react";
 import Fiches from "./Fiches";
@@ -18,10 +15,9 @@ import { useQuery, useQueryClient } from "react-query";
 import { getAuth } from "../services/authservice";
 import ChangePassword from "./ChangePassword";
 import Users from "./Users";
-import Sessions from "./Sessions";
-import { IconButton, Pane, Tab, Tablist } from "evergreen-ui";
+import { Pane, Tab, Tablist } from "evergreen-ui";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal } from "@mantine/core";
+import {Accordion, Button, Modal, ScrollArea } from "@mantine/core";
 import Fonctions from "./config/Fonctions";
 import Rubriques from "./config/Rubriques";
 import Attributionglobales from "./config/AttributionGlobale";
@@ -29,18 +25,31 @@ import AttributionFonctionnelle from "./config/AttributionFonctionnelle";
 import Divisions from "./config/Divisions";
 import Services from "./config/Services";
 import Lots from "./Lots";
-// import Nominations from "./config/Nominations";
+import Categories from "./config/Categories";
+import Temporaires from "./Temporaires";
+import { Can } from "../acl/Can";
+import { useAppStore } from "./app.store";
+import LotsCdd from "./LotsCdd";
+import Cdds from "./Cdds";
+import Cdd from "./Cdd";
+import StatusTemporaire from "./config/StatusTemporaire";
+import LotsTemporaire from "./LotsTemporaire";
+import LotCdi from "./LotCdi";
 
 
 
 function Dashboard() {
   const [showSidebar,setShowSidebar] = useState(true);
   const [opened, { open, close }] = useDisclosure(false);
+  const { role,setRole } = useAppStore();
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const tabs = useMemo(() => ['FONCTIONS','RUBRIQUES', 'ATTRIBUTIONS GLOBALES','ATTRIBUTIONS FONCTIONNELLES','DIVISIONS','SERVICES'], [])
+  const tabs = useMemo(() => ['FONCTIONS','RUBRIQUES', 'ATTRIBUTIONS GLOBALES','ATTRIBUTIONS FONCTIONNELLES','DIVISIONS','SERVICES','CATEGORIES','STATUS TEMPORAIRES'], [])
   const auth = useAuthUser()();
   const qk = ["auth", auth?.id];
-  const { data:user,isLoading } = useQuery(qk, () => getAuth(auth?.id), {
+  const { data:user} = useQuery(qk, () => getAuth(auth?.id), {
+    onSuccess(d){
+      setRole(d.role);
+    },
     stateTime: 100_000,
     refetchOnWindowFocus: false,
   });
@@ -56,28 +65,37 @@ function Dashboard() {
   };
 
   return (
-    <>
+    <div className="bg-slate-200">
      <div className="layout-wrapper layout-content-navbar">
   <div className="layout-container">
     {showSidebar && <aside  className="menu-vertical bg-menu-theme">
-      <div className="app-brand">
+      <ScrollArea>
+        <div className="app-brand">
         <Link to="">
            <img src="/logo.png" alt="logo" style={{width: '200px', height: '200px'}} />
         </Link>
       </div>
+      
       <div className="menu-inner-shadow" />
       <ul className="menu-inner py-1">
         {/* Dashboard */}
-        <li className="menu-item">
-          <Link to="/dashboard/sessions" className="menu-link">
-            <FcCalendar className="h-5 w-5 mx-1" />
-            <div >SESSIONS</div>
+        <Can  I="manage" a={role}>
+           <li className="menu-item">
+          <Link to="/dashboard/employescdi" className="menu-link">
+            <FaUsers className="h-5 w-5 mx-1 text-yellow-500" />
+            <div >EMPLOYES CDI</div>
           </Link>
         </li>
         <li className="menu-item">
-          <Link to="/dashboard/employes" className="menu-link">
-            <FaUsers className="h-5 w-5 mx-1" />
-            <div >EMPLOYES</div>
+          <Link to="/dashboard/employescdd" className="menu-link">
+            <FaUsers className="h-5 w-5 mx-1 text-blue-500" />
+            <div >EMPLOYES CDD</div>
+          </Link>
+        </li>
+        <li className="menu-item">
+          <Link to="/dashboard/temporaires" className="menu-link">
+            <FcOvertime className="h-5 w-5 mx-1 text-green-500" />
+            <div>TEMPORAIRES</div>
           </Link>
         </li>
         <li className="menu-item">
@@ -86,12 +104,40 @@ function Dashboard() {
             <div >PRESENCES</div>
           </Link>
         </li>
+        </Can>
         <li className="menu-item">
-          <Link to="/dashboard/lots" className="menu-link">
-            <SiBookstack className="h-5 w-5 mx-1 text-green-500" />
-            <div >LOTS DE BULLETIN</div>
-          </Link>
+        <Accordion>
+          <Accordion.Item  value="lot">
+                <Accordion.Control icon={<SiBookstack className="h-5 w-5 mx-1 text-green-500" />}>LOTS DE BULLETIN</Accordion.Control>
+                <Accordion.Panel>
+                    <Link to="/dashboard/lotscdi" className="menu-link">
+                      <div className="flex space-x-1">
+                      <GiPapers className="h-5 w-5 mx-1 text-green-500" />
+                        <div> LOT DE BULLETIN CDI</div>
+                        </div>
+                    </Link>
+                </Accordion.Panel>
+                <Accordion.Panel>
+                    <Link to="/dashboard/lotscdd" className="menu-link">
+                    <div className="flex space-x-1">
+                      <FaBook className="h-5 w-5 mx-1 text-amber-500" />
+                        <div> LOT DE BULLETIN CDD</div>
+                        </div>
+                    </Link>
+                </Accordion.Panel>
+                <Accordion.Panel>
+                    <Link to="/dashboard/lotstemp" className="menu-link">
+                    <div className="flex space-x-1">
+                      <FaBook className="h-5 w-5 mx-1 text-blue-500" />
+                        <div> LOT TEMPORAIRES</div>
+                        </div>
+                    </Link>
+                </Accordion.Panel>
+                  </Accordion.Item>
+        </Accordion>
+          
         </li>
+        
         <li className="menu-item">
           <Link to="/dashboard/users" className="menu-link">
             <FaUserCog className="h-5 w-5 mx-1" />
@@ -100,7 +146,9 @@ function Dashboard() {
         </li>
        
       </ul>
-    </aside>}   
+      </ScrollArea>
+    </aside>
+    }
     {/* / Menu */}
     {/* Layout container */}
     <div className="layout-page">
@@ -111,11 +159,16 @@ function Dashboard() {
             <i className="bx bx-menu bx-sm" />
           </span>
         </div>
+        <marquee className="w-full text-3xl font-bold text-green-500">RESSOURCES HUMAINES CROUS/Z</marquee>
         <div className="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
           <ul className="navbar-nav flex-row align-items-center ms-auto">
-           {user?.role === 'admin' && <li>
-              <IconButton icon={<PiGearSixDuotone className="h-6 w-6"/>} onClick={open}/>           
-            </li>}
+          <Can I="manage" a={role}>
+            <div className="flex space-x-1">
+              <Button leftSection={<PiGearSixDuotone className="h-6 w-6"/>} onClick={open}>PARAMETRE </Button>
+            </div>
+            
+          </Can>
+
             {/* User */}
             <li className="nav-item navbar-dropdown dropdown-user dropdown">
               <a className="nav-link dropdown-toggle hide-arrow" href="!#" data-bs-toggle="dropdown">
@@ -148,7 +201,9 @@ function Dashboard() {
                 </li>
                 <li>
                   <Link to='changepassword'>
-                  <Button icon={<FaUnlock className="inline px-1 w-5 h-5"/>} label="Changer mot de passe" className="dropdown-item"/>
+                  <Button leftSection={<FaUnlock className="inline px-1 w-5 h-5"/>} className="dropdown-item"> 
+                  Changer mot de passe
+                  </Button>
                   </Link>
                 </li>
                
@@ -156,9 +211,9 @@ function Dashboard() {
                   <div className="dropdown-divider" />
                 </li>
                 <li>
-                  <Button icon="bx bx-power-off me-2" label="Se Déconnecter" className="dropdown-item"
+                  <Button leftSection={<FaSignOutAlt className="inline px-1 w-5 h-5"/>} className="dropdown-item"
                    onClick={() =>logout()}
-                    />
+                    >Se Déconnecter</Button>
                 </li>
               </ul>
             </li>
@@ -170,26 +225,29 @@ function Dashboard() {
       {/* content here */}
       <Routes>
       <Route path="" element={<Employes />} />
-      <Route path="employes" element={<Employes />} />
-      <Route path="lots" element={<Lots />} />
-      <Route path="employes/:id" element={<Employe />} />
-      <Route path="employes/:id/fichepresences" element={<FicheMonth />} />
+      <Route path="employescdi" element={<Employes />} />
+      <Route path="employescdd" element={<Cdds />} />
+      <Route path="temporaires" element={<Temporaires />} />
+      <Route path="employescdi/:id" element={<Employe />} />
+      <Route path="employescdi/:id/fichepresences" element={<FicheMonth />} />
+      <Route path="employescdd/:id" element={<Cdd />} />
+      <Route path="employescdd/:id/fichepresences" element={<FicheMonth />} />
       <Route path="fiches" element={<Fiches />} />
       <Route path="fiches/:id" element={<Fiche />} />
       <Route path="users" element={<Users />} />
-      <Route path="sessions" element={<Sessions />} />
-      <Route path="changepassword" element={<ChangePassword />} />
+      <Route path="changepassword" element={<ChangePassword />} /> 
+      <Route path="lotscdi" element={<Lots />} />
+      <Route path="lotscdi/:id" element={<LotCdi />} />
+      <Route path="lotscdd" element={<LotsCdd />} />
+      <Route path="lotstemp" element={<LotsTemporaire />} />
       </Routes>
      
       </div>
       </div>
       </div>
       <div>
-  <div className="content-backdrop fade" />
-  
-  <div className="layout-overlay layout-menu-toggle" />
 </div>
-<Modal
+    <Modal
         opened={opened}
         onClose={close}
         title="PANNEAU DE CONFIGURATION"
@@ -212,7 +270,7 @@ function Dashboard() {
           </Tab>
         ))}
       </Tablist>
-      <Pane padding={16} background="tint1" flex="1">
+      <Pane padding={16} flex="1">
       <Pane
             aria-hidden={selectedIndex !== 0}
             display={selectedIndex === 0 ? 'block' : 'none'}
@@ -255,11 +313,26 @@ function Dashboard() {
           >
            <Services />
           </Pane>
+          <Pane
+            aria-hidden={selectedIndex !== 6}
+            display={selectedIndex === 6 ? 'block' : 'none'}
+            role="tabpanel"
+          >
+           <Categories />
+          </Pane>
+
+          <Pane
+            aria-hidden={selectedIndex !== 7}
+            display={selectedIndex === 7 ? 'block' : 'none'}
+            role="tabpanel"
+          >
+           <StatusTemporaire />
+          </Pane>
       </Pane>
     </Pane>
         
       </Modal>
-    </>
+    </div>
   )
 }
 

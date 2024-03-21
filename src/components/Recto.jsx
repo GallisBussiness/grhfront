@@ -1,4 +1,3 @@
-import React from 'react'
 import { Document,Font,Image,Page, StyleSheet, Text, View,Svg,Path } from "@react-pdf/renderer";
 import { createTw } from "react-pdf-tailwind";
 Font.register({
@@ -34,7 +33,7 @@ const styles = StyleSheet.create({
 
 
 
-function Recto({user}) {
+function Recto({user,nomination}) {
   return (
     <Document>
     <Page size={[285, 175]} style={tw('flex')} >
@@ -74,7 +73,7 @@ function Recto({user}) {
                <Text style={{fontFamily:'Bebas Neue',fontSize:'18px',textAlign:'center'}}>{`${user?.prenom} ${user?.nom}`}</Text>
               </View>
               <View style={{width:'60%'}}>
-            <Text style={{fontFamily:'Bebas Neue',fontSize:'10px',textAlign:'left'}}>{user?.poste}</Text>
+            <Text style={{fontFamily:'Bebas Neue',fontSize:'10px',textAlign:'left'}}>{nomination}</Text>
                 {/* <Text style={{fontFamily:'Bebas Neue',fontSize:'10px',textAlign:'left'}}>Partenariat et de la coopération</Text> */}
               </View>
               <View>

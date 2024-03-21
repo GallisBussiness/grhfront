@@ -5,27 +5,29 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createNomination, getNominationByEmploye, updateNomination } from '../../services/nominationservice';
-import { IconButton } from 'evergreen-ui'
+import { createNomination, deleteNomination, getNominationByEmploye, toggleStateNomination, updateNomination } from '../../services/nominationservice';
+import { IconButton, toaster } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
-import { Button, LoadingOverlay, Modal, Select, TextInput } from '@mantine/core'
+import { Button, LoadingOverlay, Modal, Select, Switch, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { getFonctions } from '../../services/fonctionservice'
 import { DateInput, DatesProvider } from '@mantine/dates'
 import 'dayjs/locale/fr';
 import { getDivisions } from '../../services/divisionservice'
 import { getServiceByDivision } from '../../services/serviceservice'
-import { format, parse, parseISO } from 'date-fns'
+import { format, parseISO } from 'date-fns'
+import { ConfirmPopup } from 'primereact/confirmpopup';
+import { confirmPopup } from 'primereact/confirmpopup';
 
 const schema = yup
   .object({
     date: yup.string().required(),
-    description: yup.string().required(),
+    description: yup.string(),
     fonction: yup.string().required(),
     division: yup.string().required(),
     service: yup.string().nullable()
@@ -122,7 +124,7 @@ function Nominations({employe}) {
               })
         }
     })
-
+    const qkat = ['get_AttributionFonctionnelleEmploye',employe?._id]
     const {mutate: update,isLoading: isLoadingu} = useMutation((data) => updateNomination(data._id, data.data), {
         onSuccess: (_) => {
             notifications.show({
@@ -131,6 +133,7 @@ function Nominations({employe}) {
                 color:"green"
               })
             qc.invalidateQueries(key);
+            qc.invalidateQueries(qkat);
             close();
            },
            onError: (_) => {
@@ -141,6 +144,45 @@ function Nominations({employe}) {
               })
            }
     })
+
+    const {mutate: supprimer,isLoading:isLoadingde} = useMutation((id) => deleteNomination(id), {
+      onSuccess: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression reusie !!!',
+              color:"green"
+            })
+       qc.invalidateQueries(qk);
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression échouée !!!',
+              color:"red"
+            })
+      }
+  });
+
+  const { mutate: toggleState, isLoading: loadingT } = useMutation(
+    (data) =>  toggleStateNomination(data._id, data.data),
+    {
+      onSuccess: (_) => {
+        qc.invalidateQueries(key);
+        notifications.show({
+          title: 'MODIFICATION',
+          message: 'ETAT NOMINATION CHANGE !!!',
+          color:"green"
+        })
+      },
+      onError: (_) => {
+        notifications.show({
+          title: 'MODIFICATION',
+          message: 'Changement etat échouée !!!',
+          color:"red"
+        })
+      },
+    }
+  );
 
     const leftToolbarTemplate = () => {
         return (
@@ -203,6 +245,18 @@ function Nominations({employe}) {
     }
 
 
+    const handleDeleteNomination = (event,row) => {
+      confirmPopup({
+        target: event.currentTarget,
+        message: 'Etes vous sure de vouloir supprimer ?',
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        accept: () => supprimer(row._id),
+        reject:() => toaster.notify('suppression annule !!')
+    });
+     }
+
+
     const renderHeader = () => {
         return (
             <div className="flex justify-content-between align-items-center">
@@ -214,6 +268,7 @@ function Nominations({employe}) {
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
+           <IconButton onClick={(event) => handleDeleteNomination(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
         <IconButton onClick={() => handleUpdateNomination(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
         {/* <Button type="button" onClick={() => handleViewNomination(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
@@ -223,13 +278,19 @@ function Nominations({employe}) {
 
     const header = renderHeader();
 
-    const FormatDate = (row) => format(parseISO(row.date),"yyyy-MM-dd")
+    const handleChangeState = (v,id) => {
+      const data = {_id: id, data: {est_active : v}};
+      toggleState(data);
+    };
+
+    const FormatDate = (row) => format(parseISO(row.date),"yyyy-MM-dd");
+    const statusTemplate = (row) => <Switch checked={row.est_active} size='xs' onChange={(e) => handleChangeState(e.currentTarget.checked,row._id)} />;
 
 
   return (
     <>
       <div className="content-wrapper">
-     <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingF || isLoadings} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+     <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingF || isLoadings || isLoadingd || isLoadingde ||loadingT} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">
@@ -244,6 +305,7 @@ function Nominations({employe}) {
                  <Column field="fonction.nom" header="Fonction" sortable style={{ minWidth: '10rem' }} />
                  <Column field="division.nom" header="Division" sortable style={{ minWidth: '10rem' }} /> 
                  <Column field="service.nom" header="Service" sortable style={{ minWidth: '10rem' }} /> 
+                 <Column field="est_active" header="ACTIVE" body={statusTemplate} sortable style={{ minWidth: '10rem' }} /> 
                  <Column headerStyle={{ width: '4rem', textAlign: 'center' }} bodyStyle={{ textAlign: 'center', overflow: 'visible' }} body={actionBodyTemplate} />
              </DataTable>
          </div>
@@ -320,6 +382,7 @@ function Nominations({employe}) {
         </form>
    </Modal>
 </div>
+<ConfirmPopup />
     </>
   )
 }

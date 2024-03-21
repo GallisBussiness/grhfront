@@ -3,7 +3,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { create } from "react-modal-promise";
-import { Button, Radio, TextInput } from "@mantine/core";
+import { Button} from "@mantine/core";
 import { Calendar } from 'primereact/calendar';
 import { format } from "date-fns";
 
@@ -31,7 +31,6 @@ function ChooseMonthModal({ isOpen, onResolve, onReject }) {
     
       const onCreate = (data) => {
         const {month} = data;
-        console.log(month);
         if(month !== ""){
              const m = format(month,"MM/yyyy");
             onResolve(m);

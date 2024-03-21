@@ -5,18 +5,20 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createExclusionSpecifique, getExclusionSpecifiqueByEmploye, updateExclusionSpecifique } from '../../services/exclusion-specifique';
-import { IconButton } from 'evergreen-ui'
+import { createExclusionSpecifique, deleteExclusionSpecifique, getExclusionSpecifiqueByEmploye, updateExclusionSpecifique } from '../../services/exclusion-specifique';
+import { IconButton, toaster } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, Select, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { getRubriques } from '../../services/rubriqueservice'
 import { isNumber, isString } from 'lodash'
+import { ConfirmPopup } from 'primereact/confirmpopup';
+import { confirmPopup } from 'primereact/confirmpopup';
 
 
 const schema = yup
@@ -65,6 +67,7 @@ const schema = yup
     }
 
     const qk = ['get_ExclusionSpecifiques',employe?._id]
+    const qkex = ['get_AttributionGlobaleEmploye',employe?._id]
 
     const {data: ExclusionSpecifiques, isLoading } = useQuery(qk, () => getExclusionSpecifiqueByEmploye(employe?._id));
 
@@ -86,6 +89,7 @@ const schema = yup
                 color:"green"
               })
          qc.invalidateQueries(qk);
+         qc.invalidateQueries(qkex);
          close();
         },
         onError: (_) => {
@@ -105,6 +109,7 @@ const schema = yup
                 color:"green"
               })
             qc.invalidateQueries(qk);
+            qc.invalidateQueries(qkex);
             close();
            },
            onError: (_) => {
@@ -115,6 +120,25 @@ const schema = yup
               })
            }
     })
+
+    const {mutate: supprimer,isLoading:isLoadingde} = useMutation((id) => deleteExclusionSpecifique(id), {
+      onSuccess: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression reusie !!!',
+              color:"green"
+            })
+       qc.invalidateQueries(qk);
+       qc.invalidateQueries(qkex);
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression échouée !!!',
+              color:"red"
+            })
+      }
+  })
 
     const leftToolbarTemplate = () => {
         return (
@@ -127,7 +151,6 @@ const schema = yup
 
     const onCreate = (data) => {
         const {_id,...rest} = data;
-        console.log(data)
        create(rest);
     };
 
@@ -160,6 +183,16 @@ const schema = yup
         toggle();
     }
 
+    const handleDeleteExclusion = (event,row) => {
+      confirmPopup({
+        target: event.currentTarget,
+        message: 'Etes vous sure de vouloir supprimer ?',
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        accept: () => supprimer(row._id),
+        reject:() => toaster.notify('suppression annule !!')
+    });
+     }
 
     const renderHeader = () => {
         return (
@@ -172,6 +205,7 @@ const schema = yup
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
+          <IconButton onClick={(event) => handleDeleteExclusion(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
         <IconButton onClick={() => handleUpdateExclusionSpecifique(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
         {/* <Button type="button" onClick={() => handleViewExclusionSpecifique(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
@@ -183,7 +217,7 @@ const schema = yup
     return (
       <>
       <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingR} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingR || isLoadingde} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">
@@ -194,6 +228,7 @@ const schema = yup
                  filters={filters} filterDisplay="menu" size="small" loading={isLoading} responsiveLayout="scroll"
                  globalFilterFields={['fonction.nom','rubrique.libelle']}
                  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+                  <Column field="rubrique.code" header="CODE" sortable style={{ minWidth: '10rem' }} />
                 <Column field="rubrique.libelle" header="RUBRIQUE" sortable style={{ minWidth: '10rem' }} /> 
                  <Column field="description" header="DESCRIPTION" sortable style={{ minWidth: '10rem' }} />      
                  <Column headerStyle={{ width: '4rem', textAlign: 'center' }} bodyStyle={{ textAlign: 'center', overflow: 'visible' }} body={actionBodyTemplate} />
@@ -238,7 +273,7 @@ const schema = yup
         </form>
    </Modal>
 </div>
-      
+<ConfirmPopup />
       </>
     )
   }

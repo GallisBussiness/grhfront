@@ -5,7 +5,7 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createDivision, getDivisions, updateDivision } from '../../services/divisionservice';
+import { createDivision, getDivisions, removeDivision, updateDivision } from '../../services/divisionservice';
 import { IconButton } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,8 +13,9 @@ import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, Select, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
+import { confirmPopup } from 'primereact/confirmpopup';
 
 const schema = yup
   .object({
@@ -105,6 +106,23 @@ function Divisions() {
            }
     })
 
+    const {mutate: supprimer,isLoading:isLoadingde} = useMutation((id) => removeDivision(id), {
+      onSuccess: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression reussie !!!',
+              color:"green"
+            })
+       qc.invalidateQueries(qk);
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression échouée !!!',
+              color:"red"
+            })
+      }
+  });
     const leftToolbarTemplate = () => {
         return (
             <>
@@ -125,7 +143,6 @@ function Divisions() {
     };
 
     const onUpdate = (d) => {
-      console.log(d)
         const {_id,parent,...rest} = d;
         if(parent === "") {
           update({_id,data: {...rest}});
@@ -153,6 +170,17 @@ function Divisions() {
         toggle();
     }
 
+    const handleDeleteDivision = (event,row) => {
+      confirmPopup({
+        target: event.currentTarget,
+        message: 'Etes vous sure de vouloir supprimer ?',
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        accept: () => supprimer(row._id),
+        reject:() => toaster.notify('suppression annule !!')
+    });
+     }
+
 
     const renderHeader = () => {
         return (
@@ -165,6 +193,7 @@ function Divisions() {
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
+           <IconButton onClick={(event) => handleDeleteDivision(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
         <IconButton onClick={() => handleUpdateDivision(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
         {/* <Button type="button" onClick={() => handleViewDivision(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
@@ -175,7 +204,7 @@ function Divisions() {
     const header = renderHeader();
   return (
     <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingde} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">

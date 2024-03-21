@@ -23,8 +23,6 @@ const schema = yup
 function ChangePassword() {
 
     const auth = useAuthUser()();
-    const signIn = useSignIn();
-  
     const defaultValues = { oldPass: "", newPass: "" };
     const {
       control,

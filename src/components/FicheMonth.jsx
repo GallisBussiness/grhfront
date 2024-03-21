@@ -9,12 +9,14 @@ import { getEmploye } from "../services/employeservice";
 import { useParams } from "react-router-dom";
 import { format, parse } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Can } from "../acl/Can";
 
 
 function FicheMonth() {
 
     const { id } = useParams();
   const key = ["get_employe", id];
+  const { role } = useAppStore();
   const { data: employe, isLoading } = useQuery(key, () => getEmploye(id));
 
   const presences = useAppStore((state) => state.presences);
@@ -24,7 +26,8 @@ function FicheMonth() {
 
   return (
     <>
-    <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}  loaderProps={{ color: 'blue', type: 'bars' }} />
+    <Can I='manage' a={role}>
+      <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}  loaderProps={{ color: 'blue', type: 'bars' }} />
       <div className="flex flex-col w-11/12 my-5 mx-auto">
               <div className="w-1/3 mx-auto">
                 <PDFDownloadLink document={<FicheMonthPrint presences={presences} selectedMonth={selectedMonth} employe={employe} />} fileName={`FICHE_PRESENCE_MENSUEL`}>
@@ -58,6 +61,8 @@ function FicheMonth() {
                 </Table>
                 </div>
             </div>
+    </Can>
+    
     </>
   )
 }

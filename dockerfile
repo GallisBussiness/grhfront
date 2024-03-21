@@ -16,8 +16,6 @@ COPY . .
 
 RUN yarn build
 
-RUN npm prune
-
 EXPOSE 3000
 
 # Start the server using the production build

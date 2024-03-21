@@ -16,29 +16,47 @@ import { PDFViewer } from "@react-pdf/renderer";
 import Recto from "./Recto";
 import Verso from "./Verso";
 import { useState } from "react";
-import { Pane, Paragraph, Tab, Tablist, toaster } from "evergreen-ui";
+import { Pane, Tab, Tablist, toaster } from "evergreen-ui";
 import { EmployeInfo } from "../third/EmployeInfo";
 import ChooseMonthModal from "../modals/ChooseMonthModal";
 import { getByMonthFiche } from "../services/ficheservice";
 import { useAppStore } from "./app.store";
 import { format, intervalToDuration, parse, parseISO, subMinutes } from "date-fns";
 import Nominations from "./config/Nominations";
-import AttributionSpecifique from "./config/AttributionSpecifique";
 import ExclusionSpecifique from "./config/ExclusionSpecifique";
 import Bulletins from "./Bulletins";
+import Attributions from "./Attributions";
+import Documents from "./Documents";
+import { Can } from "../acl/Can";
+import { getActiveNominationByEmploye } from "../services/nominationservice";
 
 function Employe() {
 
   const [selectedIndex, setSelectedIndex] = useState(0)
   const setPresences = useAppStore((state) => state.setPresences);
   const setSelectedMonth = useAppStore((state) => state.setSelectedMonth);
-  const [tabs] = useState(['INFOS', 'CARTE','NOMINATIONS', 'ATTRIBUTIONS','EXCLUSIONS','BULLETINS'])
+  const { role } = useAppStore();
+  const [tabs] = useState(['INFOS', 'CARTE','NOMINATIONS', 'ATTRIBUTIONS','EXCLUSIONS','BULLETINS','DOCUMENTS'])
 
     const { id } = useParams();
     const navigate = useNavigate();
   const qc = useQueryClient();
   const key = ["get_employe", id];
   const { data: employe, isLoading } = useQuery(key, () => getEmploye(id));
+  const keyn = ['GET_NOMINATION_ACTIVE',employe?._id];
+  const [nomination,setNomination] = useState('');
+  useQuery(keyn,() => getActiveNominationByEmploye(employe?._id),{
+    enabled:!!employe,
+    onSuccess:(d) => {
+      if(d.length === 0){
+        setNomination(employe?.poste);
+      }else {
+        const ns = d.map(_ => _.fonction.nom);
+      setNomination(ns.join(','));
+      }
+    },
+   onError:(_) =>  setNomination(employe?.poste)
+  })
   const filterArrive =  (tab) => {
     const p = tab?.find(t => t.type === "ARRIVEE");
     if(p){
@@ -111,13 +129,14 @@ function Employe() {
  
   return (
     <>
-     <div className="px-5 py-10 bg-slate-50 w-full">
+    <Can I='manage' a={role}>
+       <div className="px-5 py-10 bg-slate-50 w-full">
       <LoadingOverlay visible={loadingU || isLoading || isLoadingByMonth} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}
           loaderProps={{ color: 'blue', type: 'bars' }} />
       <div className="flex items-center justify-between w-11/12 mx-auto">
         <Group>
         {employe && <Avatar
-          src={`${import.meta.env.VITE_BACKURL}/uploads/profiles/${employe?.profile}`}
+          src={employe.profile ? `${import.meta.env.VITE_BACKURL}/uploads/profiles/${employe?.profile}` : '/avatar.png'}
           size={94}
           radius="xl"
           onClick={handleUpdatePhoto}
@@ -133,6 +152,10 @@ function Employe() {
 
           <Text size="lg" weight={500} >
             {employe?.nom}
+          </Text>
+
+          <Text size="lg" weight={500} >
+            {employe?.matricule_de_solde}
           </Text>
 
 
@@ -188,7 +211,7 @@ function Employe() {
                 </div>
                 <div className="flex items-center justify-evenly">
                 <PDFViewer width={400} height={400}>
-                <Recto user={employe}/>
+                <Recto user={employe} nomination={nomination}/>
                 </PDFViewer>
                 <PDFViewer width={400} height={400}>
                 <Verso />
@@ -209,7 +232,7 @@ function Employe() {
             display={selectedIndex === 3 ? 'block' : 'none'}
             role="tabpanel"
           >
-            {employe && <AttributionSpecifique employe={employe} />}
+            {employe && <Attributions id={employe._id} />}
           </Pane>
           <Pane
             aria-hidden={selectedIndex !== 4}
@@ -225,6 +248,13 @@ function Employe() {
           >
            {employe && <Bulletins employe={employe} />} 
           </Pane>
+          <Pane
+            aria-hidden={selectedIndex !== 6}
+            display={selectedIndex === 6 ? 'block' : 'none'}
+            role="tabpanel"
+          >
+           {employe && <Documents employe={employe} />} 
+          </Pane>
       </Pane>
     </Pane>
       </div>
@@ -232,6 +262,8 @@ function Employe() {
     </div>
    
     <ModalContainer />
+    </Can>
+    
     </>
   )
 }

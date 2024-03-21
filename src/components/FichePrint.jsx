@@ -1,5 +1,5 @@
 import { Document,Font,Image,Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { format, parseISO } from "date-fns";
+import { compareAsc, format, parseISO } from "date-fns";
 import { createTw } from "react-pdf-tailwind";
 
 Font.register({ family: 'Roboto', src: "/roboto-font/Roboto-Medium.ttf" });
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
 
 
 function FichePrint({presences,kpres,fiche}) {
+  const nf = {...fiche,presences:fiche.presences.sort((a,b) => compareAsc(parseISO(a.heure),parseISO(b.heure)))}
   return (
     <Document author="CROUSZ">
     <Page size="A4" wrap={true} style={{margin: 5}}>
@@ -123,16 +124,16 @@ function FichePrint({presences,kpres,fiche}) {
                        <Image src="/logo.png" style={tw('w-24 h-24')}/>
                     </View>
                     <View style={tw("flex items-center justify-center w-full my-2")}>
-                        <Text style={{fontWeight:"bold",fontFamily:"Roboto",fontSize:12}}>REF: {fiche?.ref}</Text>
+                        <Text style={{fontWeight:"bold",fontFamily:"Roboto",fontSize:12}}>REF: {nf?.ref}</Text>
                     </View> 
                     </View>
                     
         </View>
         <View style={tw("flex items-center justify-center w-11/12 mx-auto p-2 bg-cyan-500")}>
-            <Text style={{fontWeight:"bold",fontFamily:"Roboto",color: "white"}}>FICHE DE PRESENCE DU : {fiche?.date} </Text>
+            <Text style={{fontWeight:"bold",fontFamily:"Roboto",color: "white"}}>FICHE DE PRESENCE DU : {nf?.date} </Text>
         </View>
         <View style={tw("flex items-center justify-center w-full my-2")}>
-            <Text style={{fontFamily:"Roboto",fontSize: "12px"}}>{fiche?.description}</Text>
+            <Text style={{fontFamily:"Roboto",fontSize: "12px"}}>{nf?.description}</Text>
         </View>
           
           <View wrap={true}>

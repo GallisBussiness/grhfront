@@ -5,9 +5,11 @@ export const useAppStore = create(
     persist(
       (set) => ({
         presences: null,
+        role:'',
         selectedMonth: "",
-        setSelectedMonth: (month) => set({selectedMonth:month}),
-        setPresences: (data) => set({ presences: data }),
+        setSelectedMonth: (month) => set((state) => ({...state, selectedMonth: month })),
+        setRole: (role) => set((state) => ({ ...state,role })),
+        setPresences: (data) => set((state) => ({ ...state,presences: data })),
       }),
       {
         name: 'drh-storage', // name of the item in the storage (must be unique)

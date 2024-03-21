@@ -8,9 +8,11 @@ import {QueryClient,QueryClientProvider } from 'react-query'
 import 'primereact/resources/themes/saga-green/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import './index.css';
 import { AuthProvider, useIsAuthenticated } from 'react-auth-kit';
 import { Notifications } from '@mantine/notifications';
+import { AbilityContext } from './acl/Can';
+import Ability from './acl/Ability';
+import { App as AntdApp } from 'antd';
 
 
 addLocale('fr', {
@@ -87,7 +89,10 @@ const theme = createTheme({
 
 function App() {
  return (
-  <QueryClientProvider client={queryClient}>
+  <AbilityContext.Provider value={Ability}>
+    <AntdApp>
+
+      <QueryClientProvider client={queryClient}>
      <AuthProvider
         authType={"localstorage"}
         authName={import.meta.env.VITE_TOKENSTORAGENAME}
@@ -110,6 +115,9 @@ function App() {
       </AuthProvider>
   
  </QueryClientProvider>
+ </AntdApp>
+  </AbilityContext.Provider>
+
  );
 }
 

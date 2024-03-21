@@ -5,18 +5,19 @@ import { Toolbar } from 'primereact/toolbar'
 import {  useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { createAttributionSpecifique, getAttributionSpecifiqueByEmploye, updateAttributionSpecifique } from '../../services/attribution-specifique';
-import { IconButton } from 'evergreen-ui'
+import { createAttributionSpecifique, deleteAttributionSpecifique, getAttributionSpecifiqueByEmploye, updateAttributionSpecifique } from '../../services/attribution-specifique';
+import { IconButton, toaster } from 'evergreen-ui'
 import { useDisclosure } from '@mantine/hooks'
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, NumberInput, Select, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { getRubriques } from '../../services/rubriqueservice'
-import { isNumber, isString } from 'lodash'
+import { isNumber, isString } from 'lodash';
+import { confirmPopup } from 'primereact/confirmpopup';
 
 
 const schema = yup
@@ -28,13 +29,13 @@ const schema = yup
   .required();
 
   
-  function AttributionSpecifique({employe}) {
+  function AttributionSpecifique({id}) {
     const [rubriques,setRubriques] = useState([]);
     const defaultValues = {
         _id:"",
         rubrique: "",
         valeur_par_defaut: 0,
-        employe: "",
+        employe: id,
       };
       const {
         control,
@@ -64,9 +65,9 @@ const schema = yup
         setGlobalFilterValue(value);
     }
 
-    const qk = ['get_AttributionSpecifiques',employe?._id]
+    const qk = ['get_AttributionSpecifiques',id]
 
-    const {data: AttributionSpecifiques, isLoading } = useQuery(qk, () => getAttributionSpecifiqueByEmploye(employe?._id));
+    const {data: AttributionSpecifiques, isLoading } = useQuery(qk, () => getAttributionSpecifiqueByEmploye(id));
 
     const key = ['get_Rubriques'];
 
@@ -116,6 +117,25 @@ const schema = yup
            }
     })
 
+
+    const {mutate: supprimer,isLoading:isLoadingde} = useMutation((id) => deleteAttributionSpecifique(id), {
+      onSuccess: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression reusie !!!',
+              color:"green"
+            })
+       qc.invalidateQueries(qk);
+      },
+      onError: (_) => {
+          notifications.show({
+              title: 'SUPPRESSION',
+              message: 'Suppression échouée !!!',
+              color:"red"
+            })
+      }
+  })
+
     const leftToolbarTemplate = () => {
         return (
             <>
@@ -141,7 +161,8 @@ const schema = yup
       for(const p in defaultValues){
         setValue(`${p}`,"");
     }
-      setValue('employe',employe?._id);
+    setValue('valeur_par_defaut',0);
+      setValue('employe',id);
        toggle();
     }
 
@@ -160,6 +181,17 @@ const schema = yup
     }
 
 
+    const handleDeleteAttribution = (event,row) => {
+      confirmPopup({
+        target: event.currentTarget,
+        message: 'Etes vous sure de vouloir supprimer ?',
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        accept: () => supprimer(row._id),
+        reject:() => toaster.notify('suppression annule !!')
+    });
+     }
+
     const renderHeader = () => {
         return (
             <div className="flex justify-content-between align-items-center">
@@ -171,6 +203,7 @@ const schema = yup
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
+          <IconButton onClick={(event) => handleDeleteAttribution(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
         <IconButton onClick={() => handleUpdateAttributionSpecifique(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
         {/* <Button type="button" onClick={() => handleViewAttributionSpecifique(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
@@ -182,7 +215,7 @@ const schema = yup
     return (
       <>
       <div className="content-wrapper">
-  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
+  <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu || isLoadingR} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
          <div className="card p-4">
@@ -193,6 +226,7 @@ const schema = yup
                  filters={filters} filterDisplay="menu" size="small" loading={isLoading} responsiveLayout="scroll"
                  globalFilterFields={['fonction.nom','rubrique.libelle']}
                  currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+                  <Column field="rubrique.code" header="CODE" sortable style={{ minWidth: '10rem' }} /> 
                 <Column field="rubrique.libelle" header="RUBRIQUE" sortable style={{ minWidth: '10rem' }} /> 
                  <Column field="valeur_par_defaut" header="VALEUR" sortable style={{ minWidth: '10rem' }} />      
                  <Column headerStyle={{ width: '4rem', textAlign: 'center' }} bodyStyle={{ textAlign: 'center', overflow: 'visible' }} body={actionBodyTemplate} />

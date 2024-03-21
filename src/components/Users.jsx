@@ -15,6 +15,8 @@ import { Button, LoadingOverlay, Modal, PasswordInput, Select, TextInput } from 
 import { BsFillPenFill } from 'react-icons/bs'
 import { FaSearch } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
+import { Can } from '../acl/Can'
+import { useAppStore } from './app.store'
 
 const schema = yup
   .object({
@@ -44,7 +46,7 @@ function Users() {
         resolver: yupResolver(schema),
         defaultValues,
       });
-    
+      const { role } = useAppStore();
     const [curUser,setCurFontion] = useState(null);
     const [opened, {  close,toggle }] = useDisclosure(false);
     const qc = useQueryClient()
@@ -153,7 +155,10 @@ function Users() {
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
-        <IconButton onClick={() => handleUpdateUser(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
+        <Can I="updateuser" a={role}>
+           <IconButton onClick={() => handleUpdateUser(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
+        </Can>
+       
         {/* <Button type="button" onClick={() => handleViewUser(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
 
         </div>;
@@ -162,7 +167,9 @@ function Users() {
 
     const header = renderHeader();
   return (
-    <div className="content-wrapper">
+    <Can I='manage' a={role}>
+
+     <div className="content-wrapper">
   <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">
@@ -252,7 +259,7 @@ function Users() {
                             <Select
                               label="ROLE"
                               error={errors.role && errors.role.message}
-                              data={[{label:'Utilisateur',value:'user'},{label:'Administrateur',value:'admin'}]}
+                              data={[{label:'Administrateur',value:'admin'},{label:'CSA',value:'csa'},{label:'RH',value:'rh'}]}
                               value={field.value}
                               onChange={field.onChange}
                             />
@@ -269,6 +276,8 @@ function Users() {
         </form>
    </Modal>
 </div>
+    </Can>
+   
   )
 }
 

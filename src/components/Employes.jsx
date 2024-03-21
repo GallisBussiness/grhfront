@@ -2,23 +2,25 @@ import { FilterMatchMode, FilterOperator } from 'primereact/api'
 import { Column } from 'primereact/column'
 import { DataTable } from 'primereact/datatable'
 import { Toolbar } from 'primereact/toolbar'
-import {  useState } from 'react'
+import {  useRef, useState } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import ModalContainer from 'react-modal-promise'
-import { InputText } from 'primereact/inputtext'
 import { BsFillPenFill } from 'react-icons/bs'
 import createEmployeModal from '../modals/CreateEmployeModal'
 import updateEmployeModal from '../modals/UpdateEmployeModal'
-import { createEmploye, getEmployes, updateEmploye } from '../services/employeservice'
-import { FaEye, FaSearch } from 'react-icons/fa'
+import { createEmploye, getEmployes, toggleStateEmploye, updateEmploye } from '../services/employeservice'
+import { FaEye, FaFilePdf, FaSearch } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { IconButton, toaster } from 'evergreen-ui'
-import { Button, LoadingOverlay, TextInput, useMantineTheme } from '@mantine/core'
+import { ActionIcon, Button, LoadingOverlay, Switch, TextInput } from '@mantine/core'
+import { useAppStore } from './app.store'
+import { Can } from '../acl/Can'
 
 function Employes() {
-  const theme = useMantineTheme()
     const [selectedEmployes, setSelectedEmployes] = useState(null);
+    const { role } = useAppStore();
+    const dt = useRef(null);
     const qc = useQueryClient()
     const navigate = useNavigate();
     const [filters, setFilters] = useState({
@@ -61,12 +63,47 @@ function Employes() {
             console.log(_);
             toaster.danger("Mise à jour échouée !!!");
            }
-    })
+    });
+    const { mutate: toggleState, isLoading: loadingT } = useMutation(
+        (data) =>  toggleStateEmploye(data._id, data.data),
+        {
+          onSuccess: (_) => {
+            qc.invalidateQueries(qk);
+            toaster.success('ETAT EMPLOYE CHANGE !!!')
+          },
+          onError: (_) => {
+            toaster.danger('Changement etat échouée !!!')
+          },
+        }
+      );
+
+
+      const cols = [
+          { field: 'prenom', header: 'Prenom' },
+          { field: 'nom', header: 'Nom' },
+          { field: 'matricule_de_solde', header: 'Matricule' },
+          { field: 'poste', header: 'Poste' }
+      ];
+  
+      const exportColumns = cols.map((col) => ({ title: col.header, dataKey: col.field }));
+
+      const exportPdf = () => {
+        import('jspdf').then((jsPDF) => {
+            import('jspdf-autotable').then(() => {
+                const doc = new jsPDF.default(0, 0);
+
+                doc.autoTable(exportColumns, Employes.sort((a,b) => a.nom.toLowerCase() < b.nom.toLowerCase()));
+                doc.save('employes.pdf');
+            });
+        });
+    };
 
     const leftToolbarTemplate = () => {
         return (
             <>
-                <Button  variant="gradient"  leftSection={<AiOutlinePlus className="h-6 w-6 text-white"/>} onClick={() => handleCreateEmploye()} >Nouveau</Button>
+                 <Can I='crud' a={role}>
+                 <Button  variant="gradient"  leftSection={<AiOutlinePlus className="h-6 w-6 text-white"/>} onClick={() => handleCreateEmploye()} >Nouveau</Button>
+                 </Can>
             </>
         )
     }
@@ -84,7 +121,7 @@ function Employes() {
     }
 
     const handleViewEmploye = (id) => {
-      navigate('/dashboard/employes/'+id);
+      navigate('/dashboard/employescdi/'+id);
     }
 
  
@@ -94,38 +131,52 @@ function Employes() {
             <div className="flex justify-content-between align-items-center">
                 <h5 className="m-0">LISTE DES EMPLOYES</h5>
                     <TextInput value={globalFilterValue} onChange={onGlobalFilterChange} leftSection={<FaSearch/>} placeholder="Rechercher ..." />
+            <ActionIcon onClick={exportPdf} data-pr-tooltip="PDF" >
+                <FaFilePdf />
+            </ActionIcon>
             </div>
         )
     }
 
     const actionBodyTemplate = (rowData) => {
         return <div className="flex items-center justify-center space-x-1">
-        <IconButton type="button"  onClick={() => handleUpdateEmploye(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
+        <Can I='view' a={role}>
         <IconButton type="button"  onClick={() => handleViewEmploye(rowData._id)} icon={<FaEye className="text-blue-500"/>}/>
-
+        </Can>
+        <Can I='crud' a={role}>
+        <IconButton type="button"  onClick={() => handleUpdateEmploye(rowData)} icon={<BsFillPenFill className="text-green-500"/>} />
+        </Can>
         </div>;
         
     }
 
+    const handleChangeState = (v,id) => {
+        const data = {_id: id, data: {is_actif : v}};
+        toggleState(data);
+      };
+
     const header = renderHeader();
 
-    const actifTemplate = (row) => row.is_actif ? <div className="h-3 w-3 rounded-full bg-green-500"></div> : <div className="h-3 w-3 rounded-full bg-red-500"></div>;
+    // const actifTemplate = (row) => row.is_actif ? <div className="h-3 w-3 rounded-full bg-green-500"></div> : <div className="h-3 w-3 rounded-full bg-red-500"></div>;
+    const actifTemplate = (row) => <Switch checked={row.is_actif} size='xs' onChange={(e) => handleChangeState(e.currentTarget.checked,row._id)} />;
+
 
 
   return (
     <>
-    <LoadingOverlay visible={isLoading} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}  loaderProps={{ color: 'blue', type: 'bars' }}/>
+    <Can I='manage' a={role}>
+        <LoadingOverlay visible={isLoading || loadingT} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }}  loaderProps={{ color: 'blue', type: 'bars' }}/>
       <div className="content-wrapper">
        <div className="container-xxl flex-grow-1 container-p-y">
        <div className="datatable-doc">
             <div className="card p-4">
             <Toolbar className="mb-4" left={leftToolbarTemplate}></Toolbar>
-                <DataTable value={Employes} paginator className="p-datatable-customers" header={header} rows={10}
+                <DataTable value={Employes} stripedRows paginator className="p-datatable-customers"  ref={dt} header={header} rows={10}
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown" rowsPerPageOptions={[10,25,50]}
                     dataKey="_id" rowHover selection={selectedEmployes} onSelectionChange={e => setSelectedEmployes(e.value)}
                     filters={filters} filterDisplay="menu" size="small" loading={isLoading} responsiveLayout="scroll"
                     globalFilterFields={['matricule_de_solde','nom', 'prenom']}
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
+                    currentPageReportTemplate="voir {first} to {last} of {totalRecords} entries">
                     <Column field="matricule_de_solde" header="MAT SOLDE" sortable style={{ minWidth: '4rem' }} />
                     <Column field="prenom" header="Prenom" sortable style={{ minWidth: '14rem' }} />
                     <Column field="nom" header="Nom" sortable style={{ minWidth: '14rem' }} /> 
@@ -138,6 +189,8 @@ function Employes() {
        </div>
    </div>
     <ModalContainer />
+    </Can>
+    
     </>
   )
 }
