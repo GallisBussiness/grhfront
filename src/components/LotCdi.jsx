@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom"
 import { getLot, updateLot } from "../services/lotservice";
 import { useState } from "react";
 import { ActionIcon, Drawer, LoadingOverlay, ScrollArea, Switch, Text, TextInput, rem } from "@mantine/core";
-import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 import { useForm } from "@mantine/form";
 import { yupResolver } from 'mantine-form-yup-resolver';
 import * as yup from 'yup';
@@ -131,9 +130,10 @@ const confirmDelCom = (id) => {
             onChange={handlePublish}
           />
       </div>}
-     {fileName && <DocViewer prefetchMethod="GET" documents={[
-            fileName
-          ]} pluginRenderers={DocViewerRenderers} config={{pdfVerticalScrollByDefault:true}} />}
+     {fileName &&  <iframe className="mx-auto my-10" 
+                src={fileName.uri}
+            width="1000" height="800">
+        </iframe>}
     
     </div>
     <Drawer opened={opened} onClose={close} title="LES COMMENTAIRES">
@@ -147,15 +147,15 @@ const confirmDelCom = (id) => {
   {commentaires?.map((c) => (
     <li key={c._id} className={c.auteur._id === auth?.id ? "max-w-lg flex gap-x-2 sm:gap-x-4 justify-end text-wrap" : "max-w-lg flex gap-x-2 sm:gap-x-4 text-wrap"}>
     {/* <!-- Card --> */}
-    <div className={c.auteur._id === auth?.id ? "bg-blue-200 border border-blue-200 rounded-2xl p-2 space-y-2 dark:bg-slate-900 dark:border-gray-700":
-  "bg-white border border-blue-200 rounded-2xl p-2 space-y-2 dark:bg-slate-900 dark:border-gray-700"
+    <div className={c.auteur._id === auth?.id ? "bg-blue-200 border border-blue-200 rounded-2xl p-2 space-y-2":
+  "bg-white border border-blue-200 rounded-2xl p-2 space-y-2"
   }>
-      <div className="font-semibold text-sm text-gray-800 dark:text-white max-w-96 break-words">
+      <div className="font-semibold text-sm max-w-96 break-words">
        {c.contenu}
       </div>
       <Divider/>
       <div className="flex items-center space-x-2">
-        <Text size="xs"  c="dimmed" className="text-gray-800 dark:text-white">
+        <Text size="xs"  c="dimmed" className="text-gray-800">
          {format(parseISO(c.createdAt),'dd/MMMM/yyyy H:m:s',{locale: fr})} par {`${c.auteur.prenom}  ${c.auteur.nom}`}
         </Text>
         {c.auteur._id === auth?.id && <Popconfirm
@@ -206,7 +206,8 @@ const confirmDelCom = (id) => {
 
         </div>
       </Drawer>
-    <FloatButton tooltip={<div>Commentaires</div>} onClick={open}/>
+    
+    {role !== 'rh' && <FloatButton tooltip={<div>Commentaires</div>} onClick={open}/>}
     <ConfirmPopup />
     </>
     

@@ -5,13 +5,13 @@ import { confirmPopup } from "primereact/confirmpopup";
 import { Column } from "primereact/column";
 import { DataTable } from "primereact/datatable";
 import { Toolbar } from "primereact/toolbar";
-import { useRef, useState } from "react";
+import {useState } from "react";
 import { AiOutlinePlus } from "react-icons/ai";
 import { useQuery,useMutation,useQueryClient } from "react-query";
 import { BsPencilSquare } from "react-icons/bs";
 import { FaDownload, FaEye, FaPrint, FaSearch, FaTrash } from "react-icons/fa";
 import { createFiche, deleteFiche, getFiches, getFichesByWeek, toggleStateFiche, updateFiche } from "../services/ficheservice";
-import { ActionIcon, Button, Loader, LoadingOverlay, Switch, TextInput } from "@mantine/core";
+import { ActionIcon, Button, LoadingOverlay, Switch, TextInput } from "@mantine/core";
 import CreateFicheModal from "../modals/CreateFicheModal";
 import UpdateFicheModal from "../modals/UpdateFicheModal";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,6 @@ import FicheHebdoPrint from "./FicheHebdoPrint";
 
 function Fiches() {
   const [hebdo,setHebdo] = useState(null);
-  const linkref = useRef(null);
   const qk = ["get_Fiches"];
   const { data: Fiches, isLoading } = useQuery(qk, () => getFiches());
   const qc = useQueryClient();

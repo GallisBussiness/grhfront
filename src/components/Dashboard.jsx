@@ -35,6 +35,7 @@ import Cdd from "./Cdd";
 import StatusTemporaire from "./config/StatusTemporaire";
 import LotsTemporaire from "./LotsTemporaire";
 import LotCdi from "./LotCdi";
+import Rubrique from "./config/Rubrique";
 
 
 
@@ -234,6 +235,7 @@ function Dashboard() {
       <Route path="employescdd/:id/fichepresences" element={<FicheMonth />} />
       <Route path="fiches" element={<Fiches />} />
       <Route path="fiches/:id" element={<Fiche />} />
+      <Route path="rubrique/:id" element={<Rubrique />} />
       <Route path="users" element={<Users />} />
       <Route path="changepassword" element={<ChangePassword />} /> 
       <Route path="lotscdi" element={<Lots />} />
@@ -283,7 +285,7 @@ function Dashboard() {
             display={selectedIndex === 1 ? 'block' : 'none'}
             role="tabpanel"
           >
-           <Rubriques />
+           <Rubriques closeModal={close}/>
           </Pane>
           <Pane
             aria-hidden={selectedIndex !== 2}

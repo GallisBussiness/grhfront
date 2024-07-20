@@ -77,17 +77,10 @@ const [categ,setCateg] = useState([]);
 
 
   const onCreate = (data) => {
-    const { date_de_naissance,date_de_fin_de_contrat,date_de_recrutement} = data;
-    if(date_de_fin_de_contrat !== ""){
+    const { date_de_naissance,date_de_recrutement} = data;
       const nddn = format(new Date(date_de_naissance),"yyyy-MM-dd");
       const nddr = format(new Date(date_de_recrutement),"yyyy-MM-dd");
       onResolve({...data,date_de_naissance:nddn,date_de_recrutement:nddr})
-    }
-    else {
-      const nddn = format(new Date(date_de_naissance),"yyyy-MM-dd");
-      const nddr = format(new Date(date_de_recrutement),"yyyy-MM-dd");
-      onResolve({...data,date_de_naissance:nddn,date_de_recrutement:nddr})
-    }
   };
 
   return (

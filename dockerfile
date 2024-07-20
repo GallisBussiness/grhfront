@@ -14,6 +14,9 @@ RUN yarn
 # Bundle app source
 COPY . .
 
+ENV VITE_BACKURL=https://grhback.crousz.app
+ENV VITE_TOKENSTORAGENAME=grh-service
+
 RUN yarn build
 
 EXPOSE 3000

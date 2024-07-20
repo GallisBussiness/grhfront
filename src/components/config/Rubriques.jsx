@@ -10,13 +10,14 @@ import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, NumberInput, Select, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaSearch, FaTrash } from 'react-icons/fa'
+import { FaFolder, FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { Toolbar } from 'primereact/toolbar';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { getSections } from '../../services/sectionservice';
 import { confirmPopup } from 'primereact/confirmpopup';
+import { useNavigate } from 'react-router-dom';
 
 const schema = yup.object({
     libelle: yup.string().required(),
@@ -25,7 +26,7 @@ const schema = yup.object({
   })
   .required();
 
-function Rubriques() {
+function Rubriques({closeModal}) {
 
   const defaultValues = {
     _id:"",
@@ -47,6 +48,7 @@ const [curRubrique,setCurFontion] = useState(null);
 const [opened, {  close,toggle }] = useDisclosure(false);
 const [sections,setSections] = useState();
 const qc = useQueryClient()
+const navigate = useNavigate()
 const [filters, setFilters] = useState({
     'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'libelle': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
@@ -179,6 +181,11 @@ const handleDeleteRubrique = (event,row) => {
 });
  }
 
+ const handleViewRubrique  = (id) => {
+  closeModal();
+  navigate('rubrique/'+id)
+ }
+
 
 const renderHeader = () => {
     return (
@@ -193,7 +200,7 @@ const actionBodyTemplate = (rowData) => {
     return <div className="flex items-center justify-center space-x-1">
       <IconButton onClick={(event) => handleDeleteRubrique(event,rowData)} icon={<FaTrash className="text-red-500"/>} />
     <IconButton onClick={() => handleUpdateRubrique(rowData)} icon={<BsFillPenFill className="text-blue-500"/>} />
-    {/* <Button type="button" onClick={() => handleViewRubrique(rowData._id)} className="bg-gray-500" icon={<FaEye className="text-white"/>}></Button> */}
+    <IconButton  icon={<FaFolder className="text-green-500"/>} onClick={() => handleViewRubrique(rowData._id)}></IconButton>
 
     </div>;
     

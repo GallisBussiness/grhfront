@@ -250,27 +250,12 @@ function Lots() {
         icon: 'pi pi-exclamation-triangle',
         defaultFocus: 'accept',
         accept: () =>   {
-             update({_id:lot._id,data: {etat: r ? 'VALIDE': 'WAITING2'}})
+             update({_id:lot._id,data: {etat: r ? 'VALIDE': 'WAITING2'}});
              genBulletin(lot?._id);
           },
         reject:() => toaster.notify('action annulé')
     }
   )}
-
-  const handlePublish = (event,lot) => {
-    const r  = event.currentTarget.checked;
-    confirmPopup({
-      target: event.currentTarget,
-      message: 'vous etes sur de publier?',
-      icon: 'pi pi-exclamation-triangle',
-      defaultFocus: 'accept',
-      accept: () =>   {
-           update({_id:lot._id,data: {isPublished: r}})
-        },
-      reject:() => toaster.notify('action annulé')
-  }
-)
-  }
 
 
     const handleDeleteLot = (event,row) => {
@@ -376,7 +361,7 @@ function Lots() {
   return (
     <div className="content-wrapper">
   <LoadingOverlay visible={isLoadingc || isLoading || isLoadingu} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ color: 'blue', type: 'bars' }} />
-  <LoadingOverlay visible={isLoadingG} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ children:<CountUp end={100} duration={60*2} suffix=' %' /> }} />
+  <LoadingOverlay visible={isLoadingG} overlayProps={{ radius: 'sm', blur: 2 }} loaderProps={{ children:<CountUp end={100} duration={60*3} suffix='%' className='text-3xl font-semibold'/> }} />
 
     <div className="container-xxl flex-grow-1 container-p-y">
     <div className="datatable-doc">

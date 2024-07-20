@@ -12,7 +12,7 @@ import * as yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { Button, LoadingOverlay, Modal, Switch, TextInput } from '@mantine/core'
 import { BsFillPenFill } from 'react-icons/bs'
-import { FaEye,  FaHourglassEnd,  FaSearch, FaTrash } from 'react-icons/fa'
+import { FaEye, FaSearch, FaTrash } from 'react-icons/fa'
 import { notifications } from '@mantine/notifications'
 import { DatePicker } from '@mantine/dates';
 import fr from 'dayjs/locale/fr'
